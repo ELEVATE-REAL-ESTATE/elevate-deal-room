@@ -1566,10 +1566,26 @@ function submitNDA(e, dealId) {
   saveSignature(dealId, sig);
   markSignedLocally(dealId);
 
-  // Optionally: send notification to operator via mailto fallback or webhook
-  // For production, replace this with a Formspree/Webhook/Docusign integration
-  const deal = getDealById(dealId);
-  // We'll silently attempt to email notify (admin can copy into mail)
+  // Envoi notification courriel via Formspree
+  const dealTitle = document.querySelector('.deal-hero h1')?.textContent || dealId;
+  fetch('https://formspree.io/f/xkoeopyz', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json'
+    },
+    body: JSON.stringify({
+      _subject: `🔔 Nouvelle signature NDA — ${dealTitle}`,
+      deal_id: dealId,
+      deal_title: dealTitle,
+      signataire_nom: fullName,
+      signataire_organisation: org || 'Non précisé',
+      signataire_courriel: email,
+      signataire_telephone: phone || 'Non précisé',
+      date_signature: new Date().toLocaleString('fr-CA', { timeZone: 'America/Toronto' })
+    })
+  }).catch(err => console.log('Notification non envoyée:', err));
+  Add Formspree notifications
 
   showToast('Signature enregistrée — déverrouillage du dossier...');
   setTimeout(() => route(), 600);
